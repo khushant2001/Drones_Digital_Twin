@@ -19,6 +19,8 @@ from message_types.msg_state import MsgState
 import parameters.aerosonde_parameters as MAV
 """
 #from tools.rotations import Quaternion2Euler, Quaternion2Rotation
+fxx = []
+fzz = []
 x=[]
 y=[]
 z=[]
@@ -28,34 +30,38 @@ z_vel=[]
 x_roll=[]
 y_pitch=[]
 z_yaw=[]
-mass = .5
-radius = .13
-initial = np.array([
-    [0.],
-    [0.],
-    [-100.],
-    [0.],
-    [0.],
-    [0.],
-    [0.],
-    [0.],
-    [0.],
-    [0.],
-    [0.],
-    [5.],
-    [0]
-    ])
+mass = .145
+radius = .0365
+import math
+density =101 
+cl = .22
+spin_factor = .233
+
 class MavDynamics:
     def __init__(self, Ts):
         self.ts_simulation = Ts
         # set initial states based on parameter file
         # _state is the 13x1 internal state of the aircraft that is being propagated:
         # _state = [pn, pe, pd, u, v, w, e0, e1, e2, e3, p, q, r]
-        self._state = initial
+        self._state = initial = np.array([
+    [0.],#x
+    [0.],#y
+    [100.],#z
+    [0.1],#x_dot
+    [0.1],#y_dot
+    [0.1],#z_dot
+    [0.1],#e0
+    [0.1],#e1
+    [0.1],#e2
+    [0.1],#e3
+    [0.],#p
+    [10.],#q
+    [0]#r
+    ])
 
     ###################################
     # public functions
-    def update(self, forces_moments):
+    def update(self):
         '''
             Integrate the differential equations defining dynamics. 
             Inputs are the forces and moments on the aircraft.
@@ -64,10 +70,10 @@ class MavDynamics:
 
         # Integrate ODE using Runge-Kutta RK4 algorithm
         time_step = self.ts_simulation
-        k1 = self._derivatives(self._state, forces_moments)
-        k2 = self._derivatives(self._state + time_step/2.*k1, forces_moments)
-        k3 = self._derivatives(self._state + time_step/2.*k2, forces_moments)
-        k4 = self._derivatives(self._state + time_step*k3, forces_moments)
+        k1 = self._derivatives(self._state)
+        k2 = self._derivatives(self._state + time_step/2.*k1)
+        k3 = self._derivatives(self._state + time_step/2.*k2)
+        k4 = self._derivatives(self._state + time_step*k3)
         self._state += time_step/6 * (k1 + 2*k2 + 2*k3 + k4)
 
         # normalize the quaternion
@@ -77,6 +83,7 @@ class MavDynamics:
         e2 = self._state.item(8)
         e3 = self._state.item(9)
         normE = np.sqrt(e0**2+e1**2+e2**2+e3**2)
+        print(normE)
         self._state[6][0] = self._state.item(6)/normE
         self._state[7][0] = self._state.item(7)/normE
         self._state[8][0] = self._state.item(8)/normE
@@ -92,10 +99,9 @@ class MavDynamics:
         z_yaw.append(self._state.item(12))
         # update the message class for the true state
         #self._update_true_state()
-        
     ###################################
     # private functions
-    def _derivatives(self, state, forces_moments):
+    def _derivatives(self, state):
         """
         for the dynamics xdot = f(x, u), returns f(x, u)
         """
@@ -115,13 +121,23 @@ class MavDynamics:
         r = state.item(12)
 
         #   extract forces/moments
-        fx = forces_moments.item(0)
-        fy = forces_moments.item(1)
-        fz = forces_moments.item(2)
-        l = forces_moments.item(3)
-        m = forces_moments.item(4)
-        n = forces_moments.item(5)
+        vel_vector = np.array([[u, v, w]])
+        v_unit = vel_vector/np.linalg.norm(vel_vector)
         
+        omega = np.array([[p, q, r]])
+        omega_unit = omega/np.linalg.norm(omega)
+        
+        new_vector = np.cross(omega_unit,v_unit)
+        f_new = .5*cl*density*np.pi*radius**2*np.linalg.norm(vel_vector)*new_vector
+        fx = f_new[0][0]
+        fxx.append(fx)
+        fy = 0
+        fz = mass*9.81 + f_new[0][2]
+        fzz.append(fz)
+        l = 0
+        m = 0
+        n = 0
+        print(fx)
         # position kinematics
         pos_dot = np.array([
             [e1**2+e0**2 - e2**2 - e3**2, 2*(e1*e2-e3*e0), 2*(e1*e3+e2*e0)],
@@ -224,24 +240,24 @@ class MavDynamics:
         self.true_state.r = self._state.item(12)
         """
 test = MavDynamics(.1)
+"""
 forces_moments = np.array([
-    [0],
-    [-mass*9.81],
+    [],
+    [],
     [0],
     [0],
     [0],
     [0]
     ])
-for n in range(100):
-    test.update(forces_moments)
-time = np.linspace(0,100,100)
+"""
+for n in range(20):
+    test.update()
+time = np.linspace(0,20,20)
 
 plt.figure()
 plt.grid()
 plt.title("X_position")
 plt.plot(time,x)
-plt.xlim(0,100)
-plt.ylim(0,100)
 
 plt.figure()
 plt.grid()
@@ -264,6 +280,10 @@ plt.plot(time,y_vel)
 plt.grid()
 
 plt.figure()
+plt.title("Z_velocity")
+plt.grid()
+plt.plot(time, z_vel)
+plt.figure()
 plt.title("Roll vel")
 plt.plot(time,x_roll)
 plt.grid()
@@ -278,3 +298,4 @@ plt.title("Yaw vel")
 plt.grid()
 plt.plot(time,z_yaw)
 
+#plt.plot(time,fzz)
