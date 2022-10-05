@@ -46,7 +46,7 @@ class MavDynamics:
         self._state = initial = np.array([
     [0.],#x
     [0.],#y
-    [100.],#z
+    [-100.],#z
     [0.1],#x_dot
     [0.1],#y_dot
     [0.1],#z_dot
@@ -54,9 +54,9 @@ class MavDynamics:
     [0.1],#e1
     [0.1],#e2
     [0.1],#e3
-    [0.],#p
+    [0.1],#p
     [10.],#q
-    [0]#r
+    [0.1]#r
     ])
 
     ###################################
@@ -137,7 +137,7 @@ class MavDynamics:
         l = 0
         m = 0
         n = 0
-        print(fx)
+        
         # position kinematics
         pos_dot = np.array([
             [e1**2+e0**2 - e2**2 - e3**2, 2*(e1*e2-e3*e0), 2*(e1*e3+e2*e0)],
@@ -155,7 +155,7 @@ class MavDynamics:
         north_dot = pos_dot[0][0]
         east_dot =pos_dot[1][0]
         down_dot = pos_dot[2][0]
-        
+        print(north_dot)
         # position dynamics
         
         vel = np.array([[r*v - q*w],
@@ -166,6 +166,7 @@ class MavDynamics:
         u_dot = vel[0][0]
         v_dot = vel[1][0]
         w_dot = vel[2][0]
+        
         
         #Initializing the inertia matrix and required constants
         jx =  (2./5.)*mass*radius**2
@@ -250,9 +251,9 @@ forces_moments = np.array([
     [0]
     ])
 """
-for n in range(20):
+for n in range(40):
     test.update()
-time = np.linspace(0,20,20)
+time = np.linspace(0,40,40)
 
 plt.figure()
 plt.grid()
@@ -298,4 +299,6 @@ plt.title("Yaw vel")
 plt.grid()
 plt.plot(time,z_yaw)
 
-#plt.plot(time,fzz)
+plt.figure()
+plt.title("vqfvqvqeveqv")
+plt.plot(y,z)
