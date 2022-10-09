@@ -56,7 +56,7 @@ class MavDynamics:
     [0.],#e2
     [0.],#e3
     [0.0001],#p
-    [100.],#q
+    [10.],#q
     [0.0001]#r
     ])
 
@@ -253,7 +253,7 @@ forces_moments = np.array([
 """
 for n in range(500):
     test.update()
-time = np.linspace(0,50,500)
+time = np.linspace(0,500,500)
 
 plt.figure()
 plt.grid()
@@ -279,7 +279,7 @@ plt.figure()
 plt.title("Y_velocity")
 plt.plot(time,y_vel)
 plt.grid()
-"""
+
 plt.figure()
 plt.title("Z_velocity")
 plt.grid()
@@ -299,13 +299,3 @@ plt.figure()
 plt.title("Yaw vel")
 plt.grid()
 plt.plot(time,z_yaw)
-
-plt.figure()
-plt.title("vqfvqvqeveqv")
-plt.plot(y,z)
-
-plt.figure()
-plt.plot(time,fxx)
-plt.grid()
-plt.title("Force_z")
-"""
