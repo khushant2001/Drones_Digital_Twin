@@ -56,7 +56,7 @@ class MavDynamics:
     [0.],#e2
     [0.],#e3
     [0.0001],#p
-    [0.0001],#q
+    [100.],#q
     [0.0001]#r
     ])
 
@@ -123,10 +123,12 @@ class MavDynamics:
        
         new_vector = np.cross(omega_unit,v_unit)
         f_new = .5*cl*density*np.pi*radius**2*np.linalg.norm(vel_vector)*new_vector
-        fx = 0#f_new[0][0]
-        fxx.append(fx)
+        f_new = np.cross(f_new, v_unit)
+        fx = f_new[0][0]-1
+        
         fy = 0
-        fz = 1.4#mass*9.81 #+ f_new[0][2]
+        fz = mass*9.81 + f_new[0][2]
+        fxx.append(fz)
         fzz.append(fz)
         l = 0
         m = 0
@@ -218,8 +220,8 @@ class MavDynamics:
                     [r4*l+r8*n]
                 ])
         """
-        #CHECK!!!!!
-        p_dot = r1*p*q-r2*q*r+r3*l+r4*n #probably wrong WRONG
+        
+        p_dot = r1*p*q-r2*q*r+r3*l+r4*n 
         q_dot = r5*p*r-r6*(p**2-r**2)+m/jy
         r_dot = r7*p*q-r1*q*r+r4*l+r8*n
 
@@ -249,9 +251,9 @@ forces_moments = np.array([
     [0]
     ])
 """
-for n in range(4):
+for n in range(500):
     test.update()
-time = np.linspace(0,4,4)
+time = np.linspace(0,50,500)
 
 plt.figure()
 plt.grid()
@@ -267,7 +269,7 @@ plt.figure()
 plt.title("Altitude")
 plt.grid()
 plt.plot(time,z)
-"""
+
 plt.figure()
 plt.title("X_velocity")
 plt.grid()
@@ -283,7 +285,7 @@ plt.title("Z_velocity")
 plt.grid()
 plt.plot(time, z_vel)
 plt.figure()
-"""
+
 plt.title("Roll vel")
 plt.plot(time,x_roll)
 plt.grid()
@@ -301,4 +303,9 @@ plt.plot(time,z_yaw)
 plt.figure()
 plt.title("vqfvqvqeveqv")
 plt.plot(y,z)
+
+plt.figure()
+plt.plot(time,fxx)
+plt.grid()
+plt.title("Force_z")
 """
