@@ -101,46 +101,46 @@ class MavDynamics:
         n = forces_moments.item(5)
 
         # position kinematics
-        pos_dot = np.array([
-            [e1**2+e0**2 - e2**2 - e3**2, 2*(e1*e2-e3*e0), 2*(e1*e3+e2*e0)],
-            [2*(e1*e2+e3*e0), e2**2+e0**2-e1**2-e3**2, 2*(e2*e3-e1*e0)],
-            [2*(e1*e3-e2*e0), 2*(e2*e3+e1*e0), e3**2+e0**2-e1**2-e2**2]
-        ])@np.array([
-            [u],[v],[w]
-        ])
+         pos_dot = np.array([
+            [(e1**2)+(e0**2) - (e2**2) - (e3**2), 2*((e1*e2)-(e3*e0)), 2*((e1*e3)+(e2*e0))],
+            [2*((e1*e2)+(e3*e0)), (e2**2)+(e0**2)-(e1**2)-(e3**2), 2*((e2*e3)-(e1*e0))],
+            [2*((e1*e3)-(e2*e0)), 2*((e2*e3)+(e1*e0)), (e3**2)+(e0**2)-(e1**2)-(e2**2)]
+        ])@np.array([[u],[v],[w]])
         north_dot = pos_dot[0]
         east_dot = pos_dot[1]
         down_dot = pos_dot[2]
 
         # position dynamics
-        vel = np.array([[r*v - q*w],
-                          [p*w - r*u],
-                          [q*u - p*v]]) + (1/m)*np.array([[fx], [fy], [fz]])
+        vel = np.array([
+                          [(r*v) - (q*w)],
+                          [(p*w) - (r*u)],
+                          [(q*u) - (p*v)]
+                          ]) + (1/mass)*np.array([[fx], [fy], [fz]])
+       
         u_dot = vel[0]
         v_dot = vel[1]
         w_dot = vel[2]
 
         # rotational kinematics
         e_vel = .5*np.array([
-            [0,-p,-q,-r],
-            [p,0,r,-q],
-            [q,-r, 0, p],
-            [r,q,-p,0]
+            [0.,-p,-q,-r],
+            [p,0.,r,-q],
+            [q,-r, 0., p],
+            [r,q,-p,0.]
         ])@np.array([
             [e0],
             [e1],
             [e2],
-            [e3]
-        ])
+            [e3]])
         e0_dot = e_vel[0]
         e1_dot = e_vel[1]
         e2_dot = e_vel[2]
         e3_dot = e_vel[3]
 
         # rotatonal dynamics
-        p_dot = 0
-        q_dot = 0
-        r_dot = 0
+        p_dot = r1*p*q-r2*q*r+r3*l+r4*n 
+        q_dot = r5*p*r-r6*(p**2-r**2)+m/jy
+        r_dot = r7*p*q-r1*q*r+r4*l+r8*n
 
         # collect the derivative of the states
         x_dot = np.array([[north_dot, east_dot, down_dot, u_dot, v_dot, w_dot,
