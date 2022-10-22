@@ -102,12 +102,11 @@ class MavDynamics:
 
         # position kinematics
         pos_dot = np.array([
-            [e1**2+e0**2 - e2**2 - e3**2, 2*(e1*e2-e3*e0), 2*(e1*e3+e2*e0)],
-            [2*(e1*e2+e3*e0), e2**2+e0**2-e1**2-e3**2, 2*(e2*e3-e1*e0)],
-            [2*(e1*e3-e2*e0), 2*(e2*e3+e1*e0), e3**2+e0**2-e1**2-e2**2]
-        ])@np.array([
-            [u],[v],[w]
-        ])
+            [(e1**2)+(e0**2) - (e2**2) - (e3**2), 2*((e1*e2)-(e3*e0)), 2*((e1*e3)+(e2*e0))],
+            [2*((e1*e2)+(e3*e0)), (e2**2)+(e0**2)-(e1**2)-(e3**2), 2*((e2*e3)-(e1*e0))],
+            [2*((e1*e3)-(e2*e0)), 2*((e2*e3)+(e1*e0)), (e3**2)+(e0**2)-(e1**2)-(e2**2)]
+        ])@np.array([[u],[v],[w]])
+       
         north_dot = pos_dot[0]
         east_dot = pos_dot[1]
         down_dot = pos_dot[2]
@@ -138,9 +137,9 @@ class MavDynamics:
         e3_dot = e_vel[3]
 
         # rotatonal dynamics
-        p_dot = 0
-        q_dot = 0
-        r_dot = 0
+        p_dot = r1*p*q-r2*q*r+r3*l+r4*n 
+        q_dot = r5*p*r-r6*(p**2-r**2)+m/jy
+        r_dot = r7*p*q-r1*q*r+r4*l+r8*n
 
         # collect the derivative of the states
         x_dot = np.array([[north_dot, east_dot, down_dot, u_dot, v_dot, w_dot,
