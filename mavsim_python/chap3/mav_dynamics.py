@@ -101,36 +101,45 @@ class MavDynamics:
         n = forces_moments.item(5)
 
         # position kinematics
+<<<<<<< HEAD
         pos_dot = np.array([
+=======
+         pos_dot = np.array([
+>>>>>>> 4f7f17404f03a3319c2dde47cae0adb424f3567a
             [(e1**2)+(e0**2) - (e2**2) - (e3**2), 2*((e1*e2)-(e3*e0)), 2*((e1*e3)+(e2*e0))],
             [2*((e1*e2)+(e3*e0)), (e2**2)+(e0**2)-(e1**2)-(e3**2), 2*((e2*e3)-(e1*e0))],
             [2*((e1*e3)-(e2*e0)), 2*((e2*e3)+(e1*e0)), (e3**2)+(e0**2)-(e1**2)-(e2**2)]
         ])@np.array([[u],[v],[w]])
+<<<<<<< HEAD
        
+=======
+>>>>>>> 4f7f17404f03a3319c2dde47cae0adb424f3567a
         north_dot = pos_dot[0]
         east_dot = pos_dot[1]
         down_dot = pos_dot[2]
 
         # position dynamics
-        vel = np.array([[r*v - q*w],
-                          [p*w - r*u],
-                          [q*u - p*v]]) + (1/m)*np.array([[fx], [fy], [fz]])
+        vel = np.array([
+                          [(r*v) - (q*w)],
+                          [(p*w) - (r*u)],
+                          [(q*u) - (p*v)]
+                          ]) + (1/mass)*np.array([[fx], [fy], [fz]])
+       
         u_dot = vel[0]
         v_dot = vel[1]
         w_dot = vel[2]
 
         # rotational kinematics
         e_vel = .5*np.array([
-            [0,-p,-q,-r],
-            [p,0,r,-q],
-            [q,-r, 0, p],
-            [r,q,-p,0]
+            [0.,-p,-q,-r],
+            [p,0.,r,-q],
+            [q,-r, 0., p],
+            [r,q,-p,0.]
         ])@np.array([
             [e0],
             [e1],
             [e2],
-            [e3]
-        ])
+            [e3]])
         e0_dot = e_vel[0]
         e1_dot = e_vel[1]
         e2_dot = e_vel[2]
