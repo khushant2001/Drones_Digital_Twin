@@ -18,7 +18,7 @@ class WindSimulation:
         #   Dryden gust model parameters (section 4.4 UAV book)
         Va =  # must set Va to a constant value
         Lu = 
-        Lv = 
+        Lv = Lu
         Lw = 
         gust_flag = True
         if gust_flag==True:
@@ -27,13 +27,13 @@ class WindSimulation:
             sigma_w = 
         else:
             sigma_u = 
-            sigma_v = 
+            sigma_v = sigma_u
             sigma_w = 
-
+        s = transferfunction('s')
         # Dryden transfer functions (section 4.4 UAV book)
-        self.u_w = #transferFunction(num=np.array([[___]]), den=np.array([[___]]),Ts=__)
-        self.v_w = #transferFunction(num=np.array([[___]]), den=np.array([[___]]),Ts=__)
-        self.w_w = #transferFunction(num=np.array([[___]]), den=np.array([[___]]),Ts=__)
+        self.u_w = transferFunction(sigma_u*math.sqrt((2*Va)/(np.pi*Lu))*(1/(s+Va/Lu),Ts = )
+        self.v_w = #transferFunction(sigma_v*math.sqrt((e*Va)/(np.pi*Lv))*((s+(Va/Lv*3**.5))/((s+Va/Lv)**2)),Ts=__)
+        self.w_w = #transferFunction(sigma_w*math.sqrt((e*Va)/(np.pi*Lw))*((s+(Va/Lw*3**.5))/((s+Va/Lw)**2)),Ts=__)
         self._Ts = Ts
 
     def update(self):
