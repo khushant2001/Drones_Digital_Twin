@@ -101,23 +101,23 @@ class MavDynamics:
         n = forces_moments.item(5)
 
         # position kinematics
-         pos_dot = np.array([
+        pos_dot = np.array([
             [(e1**2)+(e0**2) - (e2**2) - (e3**2), 2*((e1*e2)-(e3*e0)), 2*((e1*e3)+(e2*e0))],
             [2*((e1*e2)+(e3*e0)), (e2**2)+(e0**2)-(e1**2)-(e3**2), 2*((e2*e3)-(e1*e0))],
             [2*((e1*e3)-(e2*e0)), 2*((e2*e3)+(e1*e0)), (e3**2)+(e0**2)-(e1**2)-(e2**2)]
         ])@np.array([[u],[v],[w]])
-        ])
-        north_dot = pos_dot[0]
-        east_dot = pos_dot[1]
-        down_dot = pos_dot[2]
+
+        north_dot = pos_dot.item(0)
+        east_dot = pos_dot.item(1)
+        down_dot = pos_dot.item(2)
 
         # position dynamics
         vel = np.array([[r*v - q*w],
                           [p*w - r*u],
-                          [q*u - p*v]]) + (1/m)*np.array([[fx], [fy], [fz]])
-        u_dot = vel[0]
-        v_dot = vel[1]
-        w_dot = vel[2]
+                          [q*u - p*v]]) + (1/MAV.mass)*np.array([[fx], [fy], [fz]])
+        u_dot = vel.item(0)
+        v_dot = vel.item(1)
+        w_dot = vel.item(2)
 
         # rotational kinematics
         e_vel = .5*np.array([
@@ -131,10 +131,29 @@ class MavDynamics:
             [e2],
             [e3]
         ])
-        e0_dot = e_vel[0]
-        e1_dot = e_vel[1]
-        e2_dot = e_vel[2]
-        e3_dot = e_vel[3]
+        e0_dot = e_vel.item(0)
+        e1_dot = e_vel.item(1)
+        e2_dot = e_vel.item(2)
+        e3_dot = e_vel.item(3)
+
+        jx = MAV.Jx
+        jy = MAV.Jy
+        jz = MAV.Jz
+        jxy = 0.
+        jyx = 0.
+        jxz = MAV.Jxz
+        jzx = jxz
+        jyz = 0.
+        jzy = 0.
+        r0 = jx * jz - jxz ** 2
+        r1 = (jxz * (jx - jy + jz)) / r0
+        r2 = (jz * (jz - jy) + jxz ** 2) / r0
+        r3 = jz / r0
+        r4 = jxz / r0
+        r5 = (jz - jx) / jy
+        r6 = jxz / jy
+        r7 = ((jx - jy) * jx + jxz ** 2) / r0
+        r8 = jx / r0
 
         # rotatonal dynamics
         p_dot = r1*p*q-r2*q*r+r3*l+r4*n 

@@ -91,34 +91,22 @@ class DrawMav:
 
         # points are in NED coordinates
         # define the points on the aircraft following diagram Fig 2.14
-        points = np.array([[1,1,0],  # point 1 [0]
-                           [1,-1,0],  # point 2 [1]
-                           [-1,-1,0],  # point 3 [2]
-                           [-1,1,0],#point 4
-                           [1,1,0],#point 1
-                           [1,1,-2],#point 5
-                           [1,-1,-2],#point 6
-                           [1,-1,0],#point 2
-                           [1,-1,-2],#point 6
-                           [-1,-1,-2],#point 7
-                           [-1,-1,0],#point 3
-                           [-1,-1,-2],#point 7
-                           [-1,1,-2],#point 8
-                           [-1,1,0],#point 4
-                           [-1,1,-2],#point 8
-                           [1,1,-2],#point 5
-                           [1,1,0],#point 1
-                           [1.5,1.5,0],#point 9
-                           [1.5,-1.5,0],#point 10
-                           [1,-1,0],#point 2
-                           [1.5,-1.5, 0],#point 10
-                           [-1.5,-1.5,0],#point 11
-                           [-1,-1,0],#point 3
-                           [-1.5,-1.5, 0],#point 11
-                           [-1.5,1.5,0],#point 12
-                           [-1,1,0],#point 4
-                           [-1.5,1.5,0],#point 12
-                           [1.5,1.5,0]#point 9
+        points = np.array([[fuse_l1, 0, 0],  # point 1 [0]
+                            [fuse_l2, fuse_w / 2, -fuse_h / 2],  # point 2 [1]
+                            [fuse_l2, -fuse_w / 2, -fuse_h / 2],  # point 3 [2]
+                            [fuse_l2, -fuse_w / 2, fuse_h / 2],  # point 4 [3]
+                            [fuse_l2, fuse_w / 2, fuse_h / 2],  # point 5 [4]
+                            [-fuse_l3, 0, 0],  # point 6 [5]
+                            [0, wing_w / 2, 0],  # point 7 [6]
+                            [-wing_l, wing_w / 2, 0],  # point 8 [7]
+                            [-wing_l, -wing_w / 2, 0],  # point 9 [8]
+                            [0., -wing_w / 2, 0],  # point 10 [9]
+                            [-fuse_l3 + tail_l, tail_w / 2, 0],  # point 11 [10]
+                            [-fuse_l3, tail_w / 2, 0],  # point 12 [11]
+                            [-fuse_l3, -tail_w / 2, 0],  # point 13 [12]
+                            [-fuse_l3 + tail_l, -tail_w / 2, 0],  # point 14 [13]
+                            [-fuse_l3 + tail_l, 0, 0],  # point 15 [14]
+                            [-fuse_l3, 0, -tail_h],  # point 16 [15]
                            ]).T
 
         # scale points for better rendering
@@ -126,13 +114,24 @@ class DrawMav:
         points = scale * points
 
         #   define the colors for each face of triangular mesh
-        red = np.array([1., 0., 0., 1])
-        green = np.array([0., 1., 0., 1])
-        blue = np.array([0., 0., 1., 1])
-        yellow = np.array([1., 1., 0., 1])
+        red = np.array([1., 0., 0., 1.])
+        green = np.array([0., 1., 0., 1.])
+        blue = np.array([0., 0., 1., 1.])
+        yellow = np.array([1., 1., 0., 1.])
         meshColors = np.empty((13, 3, 4), dtype=np.float32)
-        meshColors[0] = yellow
-
+        meshColors[0] = red
+        meshColors[1] = red
+        meshColors[2] = red
+        meshColors[3] = red
+        meshColors[4] = green
+        meshColors[5] = green
+        meshColors[6] = yellow
+        meshColors[7] = yellow
+        meshColors[8] = yellow
+        meshColors[9] = green
+        meshColors[10] = green
+        meshColors[11] = green
+        meshColors[12] = blue
         return points, meshColors
 
     def points_to_mesh(self, points):
@@ -142,6 +141,19 @@ class DrawMav:
           (a rectangle requires two triangular mesh faces)
         """
         points = points.T
-        mesh = np.array([[points[0], points[1], points[2], points[3],points[4],points[5],points[6],points[7],points[8],points[9],points[10],points[11],points[12],points[13],points[14],points[15],points[16],points[17],points[18],points[19],points[20],points[21],points[22],points[23],points[24],points[25],points[26],points[27]]])
+        mesh = np.array([[points[0], points[1], points[2]],  # nose
+                          [points[0], points[2], points[3]],      # nose
+                          [points[0], points[3], points[4]],      # nose
+                          [points[0], points[4], points[1]],      # nose
+                          [points[5], points[1], points[2]],      # fuselage
+                          [points[5], points[2], points[3]],      # fuselage
+                          [points[5], points[3], points[4]],      # fuselage
+                          [points[5], points[4], points[1]],      # fuselage
+                          [points[6], points[7], points[8]],      # wing
+                          [points[6], points[8], points[9]],      # wing
+                          [points[10], points[11], points[12]],   # tailwing
+                          [points[10], points[12], points[13]],   # tailwing
+                          [points[5], points[14], points[15]],    # tailwing
+                         ])
 
         return mesh

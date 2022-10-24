@@ -37,9 +37,9 @@ sim_time = SIM.start_time
 print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
     # -------vary forces and moments to check dynamics-------------
-    fx = 10
-    fy = 0  # 10
-    fz = 0  # 10
+    fx = 0.
+    fy = 0. # 10
+    fz = 11 * 9.81  # 10
     Mx = 0  # 0.1
     My = 0  # 0.1
     Mz = 0  # 0.1
