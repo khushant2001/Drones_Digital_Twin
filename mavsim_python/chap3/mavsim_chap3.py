@@ -39,7 +39,7 @@ while sim_time < SIM.end_time:
     # -------vary forces and moments to check dynamics-------------
     fx = 0.
     fy = 0. # 10
-    fz = 11 * 9.81  # 10
+    fz = 0 #11 * 9.81  # 10
     Mx = 0  # 0.1
     My = 0  # 0.1
     Mz = 0  # 0.1
