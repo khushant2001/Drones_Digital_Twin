@@ -18,7 +18,7 @@ class WindSimulation:
         #self._steady_state = np.array([[0., 5., 0.]]).T
 
         #   Dryden gust model parameters (section 4.4 UAV book)
-        Va = 10# must set Va to a constant value
+        Va = 25# must set Va to a constant value
         Lu = 200.
         Lv = Lu
         Lw = 50.
@@ -28,15 +28,15 @@ class WindSimulation:
             sigma_v = sigma_u
             sigma_w = 1.7
         else:
-            sigma_u = 1.06
-            sigma_v = sigma_u
-            sigma_w = 1.7
+            sigma_u = 0
+            sigma_v = 0
+            sigma_w = 0
         s = tf('s')
         # Dryden transfer functions (section 4.4 UAV book)
+        self.u_w = transferFunction(num=np.array([[0, 0, sigma_u * np.sqrt(2 * Va / Lu)]]),den=np.array([[0, 1, Va / Lu]]), Ts=Ts)
+        self.v_w = transferFunction(num=np.array([[0, sigma_v * np.sqrt(3 * Va / Lv), sigma_v * np.sqrt(3 * Va / Lv) * Va / (np.sqrt(3) * Lv)]]),den=np.array([[1, 2 * Va / Lv, (Va / Lv) ** 2]]), Ts=Ts)
+        self.w_w = transferFunction(num=np.array([[0, sigma_w * np.sqrt(3 * Va / Lw), sigma_w * np.sqrt(3 * Va / Lw) * Va / (np.sqrt(3) * Lw)]]),den=np.array([[1, 2 * Va / Lw, (Va / Lw) ** 2]]), Ts=Ts)
         self._Ts = Ts
-        self.u_w = tf(sigma_u*math.sqrt((2*Va)/(np.pi*Lu))/(s+Va/Lu),dt=self._Ts)
-        self.v_w = tf(sigma_v*math.sqrt((3*Va)/(np.pi*Lv))*(s+(Va/Lv*3**.5))/((s+Va/Lv)**2), dt=Ts)
-        self.w_w = tf(sigma_w*math.sqrt((3*Va)/(np.pi*Lw))*(s+(Va/Lw*3**.5))/((s+Va/Lw)**2), dt=Ts)
 
     def update(self):
         # returns a six vector.
