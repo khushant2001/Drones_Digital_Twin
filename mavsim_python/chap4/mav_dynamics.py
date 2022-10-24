@@ -298,8 +298,8 @@ class MavDynamics:
             [0]
         ])
 
-        lift = pVa2S_2 * (CL + MAV.C_L_q * c_2Va * q + MAV.C_L_delta_e * delta.elevator)
-        drag = pVa2S_2 * (CD + MAV.C_D_q * c_2Va * q + MAV.C_D_delta_e * delta.elevator)
+        lift = .5 * rho * self._Va ** 2 * S * (CL + MAV.C_L_q * c_2Va * q + MAV.C_L_delta_e * delta.elevator)
+        drag = .5 * rho * self._Va ** 2 * S * (CD + MAV.C_D_q * c_2Va * q + MAV.C_D_delta_e * delta.elevator)
 
         # compute propeller thrust and torque
         thrust_prop, torque_prop = self._motor_thrust_torque(self._alpha, delta.throttle)
@@ -307,7 +307,7 @@ class MavDynamics:
         # compute lateral and longitudinal forces in body frame
         q_dynamic = 0.5 * MAV.rho * (self._Va ** 2) * MAV.S_wing
         fx = -drag * np.cos(alpha) + lift * np.sin(alpha) + f_g.item(0) + thrust_prop11.item(0)
-        fy = pVa2S_2 * (MAV.C_Y_0 + MAV.C_Y_beta * beta + MAV.C_Y_p * b_2Va * p + MAV.C_Y_r * b_2Va * r + MAV.C_Y_delta_a * delta.aileron + MAV.C_Y_delta_r * delta.rudder) + f_g.item(
+        fy = .5 * rho * self._Va ** 2 * S * (MAV.C_Y_0 + MAV.C_Y_beta * beta + MAV.C_Y_p * b_2Va * p + MAV.C_Y_r * b_2Va * r + MAV.C_Y_delta_a * delta.aileron + MAV.C_Y_delta_r * delta.rudder) + f_g.item(
             1) + thrust_prop11.item(1)
         fz = -drag * np.sin(alpha) - lift * np.cos(alpha) + f_g.item(2) +thrust_prop11.item(2)
 
