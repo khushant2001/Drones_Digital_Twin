@@ -14,7 +14,7 @@ from control.matlab import *
 class WindSimulation:
     def __init__(self, Ts):
         # steady state wind defined in the inertial frame
-        self._steady_state = np.array([[0., 0., 0.]]).T
+        self._steady_state = np.array([[0., -10., 0.]]).T
         #self._steady_state = np.array([[0., 5., 0.]]).T
 
         #   Dryden gust model parameters (section 4.4 UAV book)
@@ -33,9 +33,9 @@ class WindSimulation:
             sigma_w = 0
         s = tf('s')
         # Dryden transfer functions (section 4.4 UAV book)
-        self.u_w = transferFunction(num=np.array([[0, 0, sigma_u * np.sqrt(2 * Va / Lu)]]),den=np.array([[0, 1, Va / Lu]]), Ts=Ts)
-        self.v_w = transferFunction(num=np.array([[0, sigma_v * np.sqrt(3 * Va / Lv), sigma_v * np.sqrt(3 * Va / Lv) * Va / (np.sqrt(3) * Lv)]]),den=np.array([[1, 2 * Va / Lv, (Va / Lv) ** 2]]), Ts=Ts)
-        self.w_w = transferFunction(num=np.array([[0, sigma_w * np.sqrt(3 * Va / Lw), sigma_w * np.sqrt(3 * Va / Lw) * Va / (np.sqrt(3) * Lw)]]),den=np.array([[1, 2 * Va / Lw, (Va / Lw) ** 2]]), Ts=Ts)
+        self.u_w = transferFunction(num=np.array([[0, 0, sigma_u*math.sqrt(2*Va/Lu)]]),den=np.array([[0, 1, Va/Lu]]), Ts=Ts)
+        self.v_w = transferFunction(num=np.array([[0, sigma_v*math.sqrt(3*Va/Lv), sigma_v*math.sqrt(3*Va/Lv)*Va/(math.sqrt(3)*Lv)]]),den=np.array([[1, 2*Va/Lv, (Va/Lv)**2]]), Ts=Ts)
+        self.w_w = transferFunction(num=np.array([[0, sigma_w*math.sqrt(3*Va/Lw), sigma_w*math.sqrt(3*Va/Lw)*Va/(math.sqrt(3)*Lw)]]),den=np.array([[1, 2*Va/Lw, (Va/Lw)**2]]), Ts=Ts)
         self._Ts = Ts
 
     def update(self):
