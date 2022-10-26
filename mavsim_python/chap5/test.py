@@ -5,7 +5,6 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 from numpy import linalg as LA
-from chap5.trim import compute_trim
 import chap5.model_coef as MOD
 
 alpha1 = MOD.a_phi1
