@@ -15,6 +15,7 @@ from chap3.data_viewer import DataViewer
 from chap4.mav_dynamics import MavDynamics
 from chap4.wind_simulation import WindSimulation
 from message_types.msg_delta import MsgDelta
+#import joystick
 
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
@@ -39,10 +40,12 @@ plot_time = sim_time
 print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
     # -------set control surfaces-------------
-    delta.elevator = 0.5 #-0.1248
+    delta.elevator = -0.005 #-0.1248
     delta.aileron = 0. #0.001836
     delta.rudder = 0. #-0.0003026
     delta.throttle = 0. #0.6768
+    #delta_e, delta_a, delta_r, delta_t = controlJoystick.getInputs()
+    #delta.from_array(np.array([[delta_e, delta_a, delta_r, delta_t]]).T)
 
     # -------physical system-------------
     current_wind = wind.update()  # get the new wind vector
