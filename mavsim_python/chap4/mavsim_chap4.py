@@ -40,10 +40,10 @@ plot_time = sim_time
 print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
     # -------set control surfaces-------------
-    delta.elevator = -0.005 #-0.1248
-    delta.aileron = 0. #0.001836
-    delta.rudder = 0. #-0.0003026
-    delta.throttle = 0. #0.6768
+    delta.elevator = 0. #-0.1248
+    delta.aileron = 0.1 #0.001836
+    delta.rudder = 0.1 #-0.0003026
+    delta.throttle = 0.1 #0.6768
     #delta_e, delta_a, delta_r, delta_t = controlJoystick.getInputs()
     #delta.from_array(np.array([[delta_e, delta_a, delta_r, delta_t]]).T)
 

@@ -63,7 +63,7 @@ class MavDynamics:
 
         e2 = self._state.item(8)
         e3 = self._state.item(9)
-        normE = np.sqrt(e0**2+e1**2+e2**2+e3**2)
+        normE = (e0**2+e1**2+e2**2+e3**2)**0.5
         self._state[6][0] = self._state.item(6)/normE
         self._state[7][0] = self._state.item(7)/normE
         self._state[8][0] = self._state.item(8)/normE
@@ -79,9 +79,9 @@ class MavDynamics:
         for the dynamics xdot = f(x, u), returns f(x, u)
         """
         # extract the states
-        # north = state.item(0)
-        # east = state.item(1)
-        # down = state.item(2)
+        north = state.item(0)
+        east = state.item(1)
+        down = state.item(2)
         u = state.item(3)
         v = state.item(4)
         w = state.item(5)
@@ -101,64 +101,36 @@ class MavDynamics:
         n = forces_moments.item(5)
 
         # position kinematics
-        pos_dot = np.array([
-            [(e1**2)+(e0**2) - (e2**2) - (e3**2), 2*((e1*e2)-(e3*e0)), 2*((e1*e3)+(e2*e0))],
-            [2*((e1*e2)+(e3*e0)), (e2**2)+(e0**2)-(e1**2)-(e3**2), 2*((e2*e3)-(e1*e0))],
-            [2*((e1*e3)-(e2*e0)), 2*((e2*e3)+(e1*e0)), (e3**2)+(e0**2)-(e1**2)-(e2**2)]
-        ])@np.array([[u],[v],[w]])
-
-        north_dot = pos_dot.item(0)
-        east_dot = pos_dot.item(1)
-        down_dot = pos_dot.item(2)
+        pos_dot = Quaternion2Rotation(np.array([e0, e1, e2, e3])) @ np.array([u, v, w])
+        north_dot = pos_dot[0]
+        east_dot = pos_dot[1]
+        down_dot = pos_dot[2]
 
         # position dynamics
-        vel = np.array([[r*v - q*w],
-                          [p*w - r*u],
-                          [q*u - p*v]]) + (1/MAV.mass)*np.array([[fx], [fy], [fz]])
-        u_dot = vel.item(0)
-        v_dot = vel.item(1)
-        w_dot = vel.item(2)
+        u_dot = r * v - q * w + fx / MAV.mass
+        v_dot = p * w - r * u + fy / MAV.mass
+        w_dot = q * u - p * v + fz / MAV.mass
 
         # rotational kinematics
-        e_vel = .5*np.array([
-            [0,-p,-q,-r],
-            [p,0,r,-q],
-            [q,-r, 0, p],
-            [r,q,-p,0]
-        ])@np.array([
-            [e0],
-            [e1],
-            [e2],
-            [e3]
-        ])
-        e0_dot = e_vel.item(0)
-        e1_dot = e_vel.item(1)
-        e2_dot = e_vel.item(2)
-        e3_dot = e_vel.item(3)
-
-        jx = MAV.Jx
-        jy = MAV.Jy
-        jz = MAV.Jz
-        jxy = 0.
-        jyx = 0.
-        jxz = MAV.Jxz
-        jzx = jxz
-        jyz = 0.
-        jzy = 0.
-        r0 = jx * jz - jxz ** 2
-        r1 = (jxz * (jx - jy + jz)) / r0
-        r2 = (jz * (jz - jy) + jxz ** 2) / r0
-        r3 = jz / r0
-        r4 = jxz / r0
-        r5 = (jz - jx) / jy
-        r6 = jxz / jy
-        r7 = ((jx - jy) * jx + jxz ** 2) / r0
-        r8 = jx / r0
+        # skew = np.array([
+        #     [0, -p, -q, -r], 
+        #     [p, 0, r, -q],
+        #     [q, -r, 0, p],
+        #     [r, q, -p, 0]])
+        # e_dot = 0.5 * skew @ np.array([e0, e1, e2, e3]).T
+        # e0_dot = e_dot.item(0) 
+        # e1_dot = e_dot.item(1) 
+        # e2_dot = e_dot.item(2) 
+        # e3_dot = e_dot.item(3) 
+        e0_dot = 0.5 * (-p*e1 - q*e2 - r*e3)
+        e1_dot = 0.5 * ( p*e0 + r*e2 - q*e3)
+        e2_dot = 0.5 * ( q*e0 - r*e1 + p*e3)
+        e3_dot = 0.5 * ( r*e0 + q*e1 - p*e2)
 
         # rotatonal dynamics
-        p_dot = r1*p*q-r2*q*r+r3*l+r4*n 
-        q_dot = r5*p*r-r6*(p**2-r**2)+m/jy
-        r_dot = r7*p*q-r1*q*r+r4*l+r8*n
+        p_dot = MAV.gamma1*p*q - MAV.gamma2*q*r + MAV.gamma3*l + MAV.gamma4*n
+        q_dot = MAV.gamma5*p*r - MAV.gamma6*(p**2 - r**2) + m / MAV.Jy
+        r_dot = MAV.gamma7*p*q - MAV.gamma1*q*r + MAV.gamma4*l + MAV.gamma8*n
 
         # collect the derivative of the states
         x_dot = np.array([[north_dot, east_dot, down_dot, u_dot, v_dot, w_dot,
