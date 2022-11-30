@@ -28,7 +28,7 @@ def compute_trim(mav, Va, gamma):
                    [],  # q
                    []   # r
                    ])
-    delta0 = #MsgDelta()
+    delta0 = MsgDelta()
     x0 = np.concatenate((state0, delta0.to_array()), axis=0)
     # define equality constraints
     cons = ({'type': 'eq',
@@ -70,5 +70,13 @@ def compute_trim(mav, Va, gamma):
 
 def trim_objective_fun(x, mav, Va, gamma):
     # objective function to be minimized
-    J = 
+    state = x[0:13]
+    delta = MsgDelta(elevator = x.item(3), aileron = x.item(14), rudder = x.item(15), throttle = x.item(16))
+    desired_trim_state_dot = np.array([[0., 0., -Va*np.sin(gamma), 0.,0., 0., 0., 0., 0., 0., 0., 0., 0.]]).T
+    mav._state = state
+    mav._update_velocity_data()
+    forces_moments = mav._forces_moments(delta)
+    f = mav._derivatives(state, forces_moments)
+    tmp = desired_trim_state_dot - f
+    J = np.linalg.norm(tmp[2:13])**2.0
     return J
