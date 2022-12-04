@@ -92,17 +92,22 @@ def compute_tf_model(mav, trim_state, trim_input):
     alpha_trim = mav._alpha
     phi, theta_trim, psi = Quaternion2Euler(trim_state[6:10])
 
+    Va_star = trim_state[3]
+    alpha_star = MAV.alpha0
+    delta_e_star = trim_input[0].item(0)
+    delta_t_star = trim_input[1].item(0)
     # define transfer function constants
-    a_phi1 = 
-    a_phi2 = 
-    a_theta1 = 
-    a_theta2 = 
-    a_theta3 = 
+    a_phi1 = -1/2*MAV.rho*mav._Va**2 * MAV.S_wing*MAV.b*MAV.C_p_p * MAV.b/(2*mav._Va)
+    a_phi2 = 1/2*MAV.rho*mav._Va**2 * MAV.S_wing*MAV.b*MAV.C_p_delta_a
+    a_theta1 = -MAV.rho*mav._Va**2 * MAV.c*MAV.S_wing/(2*MAV.Jy) * MAV.C_m_q * MAV.c/(2*mav._Va)
+    a_theta2 = -MAV.rho*mav._Va**2 * MAV.c*MAV.S_wing/(2*MAV.Jy) * MAV.C_m_alpha
+    a_theta3 = MAV.rho*mav._Va**2 * MAV.c*MAV.S_wing/(2*MAV.Jy) * MAV.C_m_delta_e
 
     # Compute transfer function coefficients using new propulsion model
-    a_V1 = 
-    a_V2 = 
-    a_V3 = 
+    a_V1 = MAV.rho*Va_star*MAV.S_wing/MAV.mass * (MAV.C_D_0 + MAV.C_D_alpha*alpha_star + MAV.C_D_delta_e * delta_e_star) + MAV.rho * MAV.S_prop/MAV.mass * MAV.C_prop*Va_star
+    a_V1 = a_V1.item(0)
+    a_V2 = MAV.rho * MAV.S_prop / MAV.mass * MAV.C_prop * MAV.k_motor ** 2 * delta_t_star
+    a_V3 = MAV.gravity
 
     return Va_trim, alpha_trim, theta_trim, a_phi1, a_phi2, a_theta1, a_theta2, a_theta3, a_V1, a_V2, a_V3
 
@@ -122,13 +127,15 @@ def compute_ss_model(mav, trim_state, trim_input):
 def euler_state(x_quat):
     # convert state x with attitude represented by quaternion
     # to x_euler with attitude represented by Euler angles
-    x_euler = 
+    x_quat[6:10] = Quaternion2Euler(x_quat[6:10])
+    x_euler = x_quat
     return x_euler
 
 def quaternion_state(x_euler):
     # convert state x_euler with attitude represented by Euler angles
     # to x_quat with attitude represented by quaternions
-    x_quat = 
+    x_euler[6:9] = Euler2Quaternion(x_euler[6:9])
+    x_quat = x_euler
     return x_quat
 
 def f_euler(mav, x_euler, delta):
@@ -140,6 +147,8 @@ def f_euler(mav, x_euler, delta):
 
 def df_dx(mav, x_euler, delta):
     # take partial of f_euler with respect to x_euler
+    eps = 0.001
+
     A = 
     return A
 
