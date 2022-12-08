@@ -36,18 +36,19 @@ autopilot = Autopilot(SIM.ts_simulation)
 # autopilot commands
 from message_types.msg_autopilot import MsgAutopilot
 commands = MsgAutopilot()
-Va_command = Signals(dc_offset=25.0,
+Va_command = Signals(dc_offset=1,
                      amplitude=3.0,
                      start_time=2.0,
                      frequency=0.01)
-altitude_command = Signals(dc_offset=100.0,
+altitude_command = Signals(dc_offset=100,
                            amplitude=10.0,
                            start_time=0.0,
-                           frequency=0.02)
+                           frequency=2.0)
+follow = [0,45,90,135,180,225,270,315,360]
 course_command = Signals(dc_offset=np.radians(180),
                          amplitude=np.radians(45),
-                         start_time=5.0,
-                         frequency=0.015)
+                         start_time=1.0,
+                         frequency=.0001)
 
 # initialize the simulation time
 sim_time = SIM.start_time
