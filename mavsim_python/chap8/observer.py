@@ -14,6 +14,7 @@ import parameters.sensor_parameters as SENSOR
 from tools.wrap import wrap
 from message_types.msg_state import MsgState
 from message_types.msg_sensors import MsgSensors
+import parameters.aerosonde_parameters as MAV
 
 class Observer:
     def __init__(self, ts_control, initial_state = MsgState(), initial_measurements = MsgSensors()):
@@ -39,12 +40,12 @@ class Observer:
     def update(self, measurement):
 
         # estimates for p, q, r are low pass filter of gyro minus bias estimate
-        self.estimated_state.p = 
-        self.estimated_state.q = 
-        self.estimated_state.r = 
+        self.estimated_state.p = self.lpf_gyro_x.update(measurement.gyro_x) - SENSOR.gyro_x_bias
+        self.estimated_state.q = self.lpf_gyro_y.update(measurement.gyro_y) - SENSOR.gyro_y_bias
+        self.estimated_state.r = self.lpf_gyro_z.update(measurement.gyro_x) - SENSOR.gyro_z_bias
 
         # invert sensor model to get altitude and airspeed
-        self.estimated_state.altitude = 
+        self.estimated_state.altitude = self.lpf_static.update(measurement.static_pressure)/(MAV.rho*MAV.gravity)
         self.estimated_state.Va = 
 
         # estimate phi and theta with simple ekf
@@ -70,7 +71,7 @@ class AlphaFilter:
         self.y = y0  # initial condition
 
     def update(self, u):
-        self.y = 
+        self.y = self.alpha*self.y+(1-self.aplha)*u
         return self.y
 
 
@@ -131,11 +132,12 @@ class EkfAttitude:
         h = self.h(self.xhat, measurement, state)
         C = jacobian(self.h, self.xhat, measurement, state)
         y = np.array([[measurement.accel_x, measurement.accel_y, measurement.accel_z]]).T
-        S_inv = 
+        S_inv = np.linalg.inv(self.R_accel+C@self.P@C.T)
         if (y-h).T @ S_inv @ (y-h) < self.gate_threshold:
-            L = 
-            self.P = 
-            self.xhat =
+            L = self.P@C.T@S_inv
+            tmp = np.eye(2)-L@C
+            self.P = tmp@self.P@tmp.T+L@self.R_accel@L.T
+            self.xhat =self.xhat+L@(y-h)
             #print('updating')
 
 

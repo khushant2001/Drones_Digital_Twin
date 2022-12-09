@@ -20,7 +20,7 @@ class WindSimulation:
         Lu = 200
         Lv = Lu
         Lw = 50
-        gust_flag = False
+        gust_flag = True
         if gust_flag==True:
             sigma_u = 1.06
             sigma_v = 1.06

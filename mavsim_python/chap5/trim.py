@@ -14,22 +14,22 @@ from message_types.msg_delta import MsgDelta
 def compute_trim(mav, Va, gamma):
     # define initial state and input
     e0 = Euler2Quaternion(0., gamma, 0.)
-    state0 = np.array([[],  # pn
-                   [],  # pe
-                   [],  # pd
-                   [],  # u
-                   [],  # v
-                   [],  # w
-                   [],  # e0
-                   [],  # e1
-                   [],  # e2
-                   [],  # e3
-                   [],  # p
-                   [],  # q
-                   []   # r
+    state0 = np.array([[0],  # pn
+                   [0],  # pe
+                   [0],  # pd
+                   [0],  # u
+                   [0],  # v
+                   [0],  # w
+                   [0],  # e0
+                   [0],  # e1
+                   [0],  # e2
+                   [0],  # e3
+                   [0],  # p
+                   [0],  # q
+                   [0]   # r
                    ])
     delta0 = MsgDelta()
-    x0 = np.concatenate((state0, delta0.to_array()), axis=0)
+    x0 = np.concatenate((state0, delta0.to_array()), axis = 0)
     # define equality constraints
     cons = ({'type': 'eq',
              'fun': lambda x: np.array([
