@@ -95,20 +95,20 @@ class EkfAttitude:
 
     def f(self, x, measurement, state):
         # system dynamics for propagation model: xdot = f(x, u)
-        p = 
-        q = 
-        r = 
-        G = 
-        f_ = 
+        p = measurement[0]
+        q = measurement[1]
+        r = mesurement[2]
+        G = np.array([[1, np.sin(x[0])*np.tan(x[1]), np.cos(x[0])*np.tan(x[1]), 0], [0, np.cos(x[0]), -np.sin(x[0]), 0]])
+        f_ = np.array([[p+q*np.sin(x[0])*np.tan(x[1])+r*np.cos(x[0])*np.tan(x[1])], [q*np.cos(x[0])-r*np.sin(x[0])]])
         return f_
 
     def h(self, x, measurement, state):
         # measurement model y
-        p = 
-        q = 
-        r = 
-        Va = 
-        h_ = 
+        p = measurement[0]
+        q = mesurement[1]
+        r = measurement[2]
+        Va = measurement[3]
+        h_ = np.array([[q*Va*np.sin(x[1]) + g*np.sin(x[1])], [r*Va*np.cos(x[1])-p*Va*np.sin(x[1])-g*np.cos(x[1])*np.sin(x[0])], [-q*Va*np.cos(x[1])-g*np.cos(x[1])*np.cos(x[0])]])
         return h_
 
     def propagate_model(self, measurement, state):
@@ -171,21 +171,37 @@ class EkfPosition:
 
     def f(self, x, measurement, state):
         # system dynamics for propagation model: xdot = f(x, u)
-        Vg = 
-        chi = 
-        psi = 
-        psidot =
-        Vgdot = 
-        f_ = 
+        pn = x[0]
+        pe = x[1]
+        Vg = x[2]
+        chi = x[3]
+        wn = x[4]
+        we = x[5]
+        psi = x[6]
+        Va = measurement[0]
+        q = measurement[1]
+        r = measurement[2]
+        phi = measurement[3]
+        theta = measurement[4]
+        wndot = 0
+        wedot = 0
+        Vadot = 0
+        psidot = q*(np.sin(phi)/np.cos(theta)) + r*(np.cos(phi)/np.cos(theta))
+        Vgdot = ((Va*np.cos(psi)+wn)*(Vadot*np.cos(psi)-Va*psidot*np.sin(psi)+wndot)+(Va*np.sin(psi)+we)*(Vadot*np.sin(psi)+Va*psidot*np.cos(psi)+wedot))/Vg
+        f_ = np.array([[Vg*np.cos(chi)], [Vg*np.sin(chi)], [Vgdot], [(g/Vg)*np.tan(phi)*np.cos(chi-psi)], [0], [0], [psidot]])
         return f_
 
     def h_gps(self, x, measurement, state):
         # measurement model for gps measurements
-        pn = 
-        pe = 
-        Vg = 
-        chi = 
-        h_ = 
+        pn = x[0]
+        pe = x[1]
+        Vg = x[2]
+        chi = x[3]
+        Va = measurement[0]
+        wn = x[4]
+        we = x[5]
+        psi = x[6]
+        h_ = np.array([[pn], [pe], [Vg], [chi], [Va*np.cos(psi)+wn-Vg*np.cos(chi)], [Va*np.sin(psi)+we-Vg*np.sin(chi)]])
         return h_
 
     def h_pseudo(self, x, measurement, state):
