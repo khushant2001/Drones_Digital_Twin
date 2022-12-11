@@ -81,14 +81,14 @@ class AlphaFilter:
 class EkfAttitude:
     # implement continous-discrete EKF to estimate roll and pitch angles
     def __init__(self):
-        self.Q = 
-        self.Q_gyro =
-        self.R_accel = 
-        self.N =   # number of prediction step per sample
-        self.xhat =  # initial state: phi, theta
-        self.P = 
-        self.Ts = 
-        self.gate_threshold = #stats.chi2.isf()
+        self.Q = np.diag((1e-9, 1e-9))
+        self.Q_gyro = np.eye(3) * SENSOR.gyro_sigma ** 2
+        self.R_accel = np.eye(3) * SENSOR.accel_sigma ** 2
+        self.N = 5  # number of prediction step per sample
+        self.xhat = np.vstack((MAV.phi0, MAV.theta0)) # initial state: phi, theta
+        self.P = np.eye(2)
+        self.Ts = SIM.ts_control/self.N
+        self.gate_threshold = stats.chi2.isf()
 
     def update(self, measurement, state):
         self.propagate_model(measurement, state)
@@ -127,16 +127,22 @@ class EkfAttitude:
         for i in range(0, self.N):
 
             # propagate model
-            self.xhat = 
+            self.xhat = self.xhat+ self.f(self.xhat, state, measurement)
             # compute Jacobian
-            A = #jacobian()
+            A = jacobian(self.f, self.xhat, state, measurement)
 
             # compute G matrix for gyro noise
-            G = 
+            phi = state.psi
+            theta = state.theta
+            G = np.array([
+                [1.0, sin(phi) * tan(theta), cos(phi) * tan(theta), 0],
+                [0.0, cos(phi), -sin(phi), 0]
+            ])
             # convert to discrete time models
-            A_d = 
+            A_d = np.eye(len(A))+A*self.Ts+(A@A)*(self.Ts**2)/2.0
             # update P with discrete time model
-            self.P = 
+            G_d = G*self.Ts
+            self.P = A_d@self.P@A_d.transpose()+self.Ts**2*self.Q+G_d @ self.Q_gyro @ G_d.T
 
     def measurement_update(self, measurement, state):
         # measurement updates
@@ -214,7 +220,7 @@ class EkfPosition:
 
     def h_pseudo(self, x, measurement, state):
         # measurement model for wind triangale pseudo measurement
-        Vg = 
+        Vg = x.item(2)
         chi = x.item(3)
         wn = x.item(4)
         we = x.item(5)
