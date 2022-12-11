@@ -60,10 +60,14 @@ class Autopilot:
     def update(self, cmd, state):
 
         # lateral autopilot
-        chi_c = 
-        phi_c = 
-        delta_a = 
-        delta_r = 
+        #check chi_C
+        Va_c = cmd.airspeed_command  # commanded airspeed (m/s)
+        h_c = cmd.altitude_command  # commanded altitude (m)
+        chi_c = cmd.course_command
+        chi_c = self.roll_from_course.update(chi_c, state.chi, reset_flag) + cmd.phi_feedforward
+        phi_c = np.clip(phi_c, self.roll_from_course.low_limit, self.roll_from_course.high_limit)
+        delta_a = self.aileron_from_roll.update_with_rate(phi_c, phi, p, reset_flag)
+        delta_r = 0
 
         # longitudinal TECS autopilot
         # error in kinetic energy

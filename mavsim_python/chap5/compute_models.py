@@ -7,6 +7,7 @@ compute_ss_model
 import sys
 sys.path.append('..')
 import numpy as np
+import math
 from scipy.optimize import minimize
 from tools.rotations import Euler2Quaternion, Quaternion2Euler
 import parameters.aerosonde_parameters as MAV
@@ -15,7 +16,7 @@ from message_types.msg_delta import MsgDelta
 
 
 def compute_model(mav, trim_state, trim_input):
-    A_lon, B_lon, A_lat, B_lat = compute_ss_model(mav, trim_state, trim_input)
+    #A_lon, B_lon, A_lat, B_lat = compute_ss_model(mav, trim_state, trim_input)
     Va_trim, alpha_trim, theta_trim, a_phi1, a_phi2, a_theta1, a_theta2, a_theta3, \
     a_V1, a_V2, a_V3 = compute_tf_model(mav, trim_state, trim_input)
 
@@ -40,6 +41,7 @@ def compute_model(mav, trim_state, trim_input):
     file.write('a_V1 = %f\n' % a_V1)
     file.write('a_V2 = %f\n' % a_V2)
     file.write('a_V3 = %f\n' % a_V3)
+    """""
     file.write('A_lon = np.array([\n    [%f, %f, %f, %f, %f],\n    '
                '[%f, %f, %f, %f, %f],\n    '
                '[%f, %f, %f, %f, %f],\n    '
@@ -82,7 +84,7 @@ def compute_model(mav, trim_state, trim_input):
      B_lat[4][0], B_lat[4][1],))
     file.write('Ts = %f\n' % Ts)
     file.close()
-
+"""
 
 def compute_tf_model(mav, trim_state, trim_input):
     # trim values
@@ -111,19 +113,51 @@ def compute_tf_model(mav, trim_state, trim_input):
 
     return Va_trim, alpha_trim, theta_trim, a_phi1, a_phi2, a_theta1, a_theta2, a_theta3, a_V1, a_V2, a_V3
 
-
+E1 = np.array([
+    [0,0,0,1,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,1,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,0,0,0,0],
+    [0,0,-1,0,0,0,0,0,0,0,0,0]
+])
+E2 = np.array([
+    [0,1,0,0],
+    [1,0,0,0]
+])
+E3 = np.array([
+    [0,0,0,0,1,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,1,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,1],
+    [0,0,0,0,0,0,1,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,1,0,0,0]
+])
+E4 = np.array([
+    [0,0,1,0],
+    [0,0,0,1]
+])
+"""""
+def Te_partial_xq(xq):
+    temp = np.array([
+        [np.eye(3), np.zeros((3,3)), np.zeros((3,4)), np.zeros((3,3))],
+        [np.zeros((3,3)), np.eye(3), np.zeros((3,4)), np.zeros((3,3))],
+        [np.zeros((3,3)), np.zeros((3,3)), i dont know, np.zeros((3,3))],
+        [np.zeros((3,3)), np.zeros((3,3)), np.zeros((3,4)), np.eye(3)]
+    ])
+    """
+"""""
 def compute_ss_model(mav, trim_state, trim_input):
     x_euler = euler_state(trim_state)
-    A = 
-    B = 
+    A = df_dx(Te_partial_xq(quaternion_state(mav)))
+    B = df_du((Te_partial_xq(quaternion_state(mav))))
     # extract longitudinal states (u, w, q, theta, pd) and change pd to h
-    A_lon = 
-    B_lon =
+    A_lon = E1@A@E1.transpose()
+    B_lon = E1@B@E2.transpose()
     # extract lateral states (v, p, r, phi, psi)
-    A_lat =
-    B_lat =
+    A_lat = E3@A@E3.transpose()
+    B_lat = E4@B@E4.transpose()
     return A_lon, B_lon, A_lat, B_lat
 
+#Initializing T_e
 def euler_state(x_quat):
     # convert state x with attitude represented by quaternion
     # to x_euler with attitude represented by Euler angles
@@ -131,6 +165,7 @@ def euler_state(x_quat):
     x_euler = x_quat
     return x_euler
 
+#Initializing T_q
 def quaternion_state(x_euler):
     # convert state x_euler with attitude represented by Euler angles
     # to x_quat with attitude represented by quaternions
@@ -148,7 +183,7 @@ def f_euler(mav, x_euler, delta):
 def df_dx(mav, x_euler, delta):
     # take partial of f_euler with respect to x_euler
     eps = 0.001
-
+    A = np.zeros((m,n))
     A = 
     return A
 
@@ -172,3 +207,4 @@ def dT_ddelta_t(mav, Va, delta_t):
     T_eps, Q_eps = #mav._motor_thrust_torque()
     T, Q = #mav._motor_thrust_torque()
     return (T_eps - T) / eps
+"""
