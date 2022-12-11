@@ -130,7 +130,7 @@ class EkfAttitude:
             self.xhat = self.xhat+ self.f(self.xhat, state, measurement)
             # compute Jacobian
             A = jacobian(self.f, self.xhat, state, measurement)
-
+            #testing
             # compute G matrix for gyro noise
             phi = state.psi
             theta = state.theta
