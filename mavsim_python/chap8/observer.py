@@ -15,6 +15,9 @@ from tools.wrap import wrap
 from message_types.msg_state import MsgState
 from message_types.msg_sensors import MsgSensors
 import parameters.aerosonde_parameters as MAV
+from math import tan
+from math import cos
+from math import sin
 
 class Observer:
     def __init__(self, ts_control, initial_state = MsgState(), initial_measurements = MsgSensors()):
@@ -45,8 +48,8 @@ class Observer:
         self.estimated_state.r = self.lpf_gyro_z.update(measurement.gyro_x) - SENSOR.gyro_z_bias
 
         # invert sensor model to get altitude and airspeed
-        self.estimated_state.altitude = self.lpf_static.update(measurement.static_pressure)/(MAV.rho*MAV.gravity)
-        self.estimated_state.Va = 
+        self.estimated_state.altitude = self.lpf_abs.update(measurement.static_pressure)/(MAV.rho*MAV.gravity)
+        self.estimated_state.Va = np.sqrt(2/MAV.rho*self.lpf_diff.update(measurement.diff_pressure))
 
         # estimate phi and theta with simple ekf
         self.attitude_ekf.update(measurement, self.estimated_state)
@@ -95,20 +98,28 @@ class EkfAttitude:
 
     def f(self, x, measurement, state):
         # system dynamics for propagation model: xdot = f(x, u)
-        p = measurement[0]
-        q = measurement[1]
-        r = mesurement[2]
-        G = np.array([[1, np.sin(x[0])*np.tan(x[1]), np.cos(x[0])*np.tan(x[1]), 0], [0, np.cos(x[0]), -np.sin(x[0]), 0]])
-        f_ = np.array([[p+q*np.sin(x[0])*np.tan(x[1])+r*np.cos(x[0])*np.tan(x[1])], [q*np.cos(x[0])-r*np.sin(x[0])]])
+        p = measurement.gyro_x
+        q = measurement.gyro_y
+        r = measurement.gyro_z
+        phi = x.item(0)
+        theta = x.item(1)
+        one = p+q*sin(phi)*tan(theta)+r*cos(phi)*tan(theta)
+        two = q*cos(phi)-r*sin(phi)
+        f_ = np.vstack((one,two))
         return f_
 
     def h(self, x, measurement, state):
         # measurement model y
-        p = measurement[0]
-        q = mesurement[1]
-        r = measurement[2]
-        Va = measurement[3]
-        h_ = np.array([[q*Va*np.sin(x[1]) + g*np.sin(x[1])], [r*Va*np.cos(x[1])-p*Va*np.sin(x[1])-g*np.cos(x[1])*np.sin(x[0])], [-q*Va*np.cos(x[1])-g*np.cos(x[1])*np.cos(x[0])]])
+        p = measurement.gyro_x
+        q = measurement.gyro_y
+        r = measurement.gyro_z
+        phi = x.item(0)
+        theta = x.item(1)
+        Va = state.Va
+        one = q * Va * sin(theta) + MAV.gravity * sin((theta))
+        two = r * Va * cos(theta) - p * Va * sin(theta) - MAV.gravity * cos(theta) * sin(phi)
+        three = -q * Va * cos(theta) - MAV.gravity * cos(theta) * cos(phi)
+        h_ = np.vstack((one,two,three))
         return h_
 
     def propagate_model(self, measurement, state):
@@ -171,47 +182,45 @@ class EkfPosition:
 
     def f(self, x, measurement, state):
         # system dynamics for propagation model: xdot = f(x, u)
-        pn = x[0]
-        pe = x[1]
-        Vg = x[2]
-        chi = x[3]
-        wn = x[4]
-        we = x[5]
-        psi = x[6]
-        Va = measurement[0]
-        q = measurement[1]
-        r = measurement[2]
-        phi = measurement[3]
-        theta = measurement[4]
-        wndot = 0
-        wedot = 0
-        Vadot = 0
-        psidot = q*(np.sin(phi)/np.cos(theta)) + r*(np.cos(phi)/np.cos(theta))
-        Vgdot = ((Va*np.cos(psi)+wn)*(Vadot*np.cos(psi)-Va*psidot*np.sin(psi)+wndot)+(Va*np.sin(psi)+we)*(Vadot*np.sin(psi)+Va*psidot*np.cos(psi)+wedot))/Vg
-        f_ = np.array([[Vg*np.cos(chi)], [Vg*np.sin(chi)], [Vgdot], [(g/Vg)*np.tan(phi)*np.cos(chi-psi)], [0], [0], [psidot]])
+        pn = x.item(0)
+        pe = x.item(1)
+        Vg = x.item(2)
+        chi = x.item(3)
+        wn = x.item(4)
+        we = x.item(5)
+        psi = x.item(6)
+        p = measurement.gyro_x
+        r = measurement.gyro_y
+        q = measurement.gyro_z
+        theta = state.theta
+        phi = state.phi
+        pndot = Vg * cos(chi)
+        pedot = Vg * sin(chi)
+        Va = state.Va
+        chidot = MAV.gravity/Vg*tan(phi)*cos(chi-psi)
+        psidot = q * sin(phi) / cos(theta) + r * cos(phi) / cos(theta)
+        Vgdot = ((Va*cos(psi) + wn) * (-Va*psidot*sin(psi)) + (Va*sin(psi) + we)*(Va*psidot*cos(psi)))*1/Vg
+        f_ = np.vstack((pndot, pedot, Vgdot, chidot, 0, 0, psidot))
         return f_
 
     def h_gps(self, x, measurement, state):
         # measurement model for gps measurements
-        pn = x[0]
-        pe = x[1]
-        Vg = x[2]
-        chi = x[3]
-        Va = measurement[0]
-        wn = x[4]
-        we = x[5]
-        psi = x[6]
-        h_ = np.array([[pn], [pe], [Vg], [chi], [Va*np.cos(psi)+wn-Vg*np.cos(chi)], [Va*np.sin(psi)+we-Vg*np.sin(chi)]])
+        pn = x.item(0)
+        pe = x.item(1)
+        Vg = x.item(2)
+        chi = x.item(3)
+        h_ = np.vstack((pn,pe,Vg,chi))
         return h_
 
     def h_pseudo(self, x, measurement, state):
         # measurement model for wind triangale pseudo measurement
         Vg = 
-        chi = 
-        wn = 
-        we = 
-        psi = 
-        h_ = 
+        chi = x.item(3)
+        wn = x.item(4)
+        we = x.item(5)
+        psi = x.item(6)
+        Va = state.Va
+        h_ = np.vstack((Va*cos(psi)+wn - (Vg*cos(chi))), Va*sin(psi)+we - (Vg*sin(chi)))
         return h_
 
     def propagate_model(self, measurement, state):
