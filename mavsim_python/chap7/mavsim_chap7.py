@@ -39,15 +39,15 @@ commands = MsgAutopilot()
 Va_command = Signals(dc_offset=25.0,
                      amplitude=3.0,
                      start_time=2.0,
-                     frequency=0.01)
+                     frequency=0.1)
 altitude_command = Signals(dc_offset=100.0,
                            amplitude=10.0,
                            start_time=0.0,
-                           frequency=0.02)
+                           frequency=0.2)
 course_command = Signals(dc_offset=np.radians(180),
                          amplitude=np.radians(45),
                          start_time=5.0,
-                         frequency=0.015)
+                         frequency=0.15)
 
 # initialize the simulation time
 sim_time = SIM.start_time
@@ -57,9 +57,9 @@ print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
 
     # -------autopilot commands-------------
-    commands.airspeed_command = Va_command.square(sim_time)
-    commands.course_command = course_command.square(sim_time)
-    commands.altitude_command = altitude_command.square(sim_time)
+    commands.airspeed_command = Va_command.sinusoid(sim_time)
+    commands.course_command = course_command.sinusoid(sim_time)
+    commands.altitude_command = altitude_command.sinusoid(sim_time)
 
     # -------autopilot-------------
     measurements = mav.sensors()  # get sensor measurements

@@ -113,14 +113,15 @@ class MavDynamics:
 
     def sensors(self):
         "Return value of sensors on MAV: gyros, accels, absolute_pressure, dynamic_pressure, GPS"
+
         state = self.true_state
         pn = state.north
         pe = state.east
-        h = state.altitude
-        pd = h
-        p = state.p
-        q = state.q
-        r = state.r
+        h = -self._state.item(2)
+        #pd = h
+        p = self._state.item(10)
+        q = self._state.item(11)
+        r = self._state.item(12)
         phi = state.phi
         theta = state.theta
         psi = state.psi
@@ -140,7 +141,7 @@ class MavDynamics:
                     fz / MAV.mass - g * cos(theta) * cos(phi) + np.random.normal(0, SENSOR.accel_sigma)).item(0)
         beta_abs_pres = 0
         beta_diff_pres = 0
-        h_AGL = -pd
+        h_AGL = h
         self._sensors.static_pressure = MAV.rho * MAV.gravity * h_AGL + beta_abs_pres + np.random.normal(0,
                                                                                                          SENSOR.abs_pres_sigma)
         self._sensors.diff_pressure = MAV.rho * self._Va ** 2 / 2 + beta_diff_pres + np.random.normal(0,
@@ -154,7 +155,7 @@ class MavDynamics:
                                                                                                          SENSOR.gps_h_sigma)
             self._sensors.gps_n = pn + self._gps_eta_n
             self._sensors.gps_e = pe + self._gps_eta_e
-            self._sensors.gps_h = -pd + self._gps_eta_h
+            self._sensors.gps_h = -self._state.item(2) + self._gps_eta_h
             wn = state.wn
             we = state.we
             V1 = Va * np.sin(psi) + we
